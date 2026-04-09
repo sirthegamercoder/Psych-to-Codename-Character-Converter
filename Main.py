@@ -26,6 +26,13 @@ from PySide6.QtCore import QSettings
 
 from lxml import etree
 
+def resource_path(relative_path):
+        try:
+            base_path = sys._MEIPASS
+        except Exception:
+            base_path = os.path.abspath(".")
+
+        return os.path.join(base_path, relative_path)
 
 class ConversionWorker(QThread):
     finished = Signal(dict)
@@ -225,6 +232,10 @@ class PsychToCodenameConverter(QMainWindow):
         self.setFixedSize(750, 600)
         self.center()
 
+        xml_icon_path = resource_path("icons/xml.png")
+        output_icon_path = resource_path("icons/output.png")
+        convert_icon_path = resource_path("icons/convert.png")
+
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
 
@@ -248,7 +259,12 @@ class PsychToCodenameConverter(QMainWindow):
 
         self.select_file_btn = QPushButton("Select XML File")
         self.select_file_btn.clicked.connect(self.select_xml_file)
-        self.select_file_btn.setIcon(QIcon("icons/xml.png"))
+
+        if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+            self.select_file_btn.setIcon(QIcon(xml_icon_path))
+        else:
+            self.select_file_btn.setIcon(QIcon("icons/xml.png"))
+
         file_layout.addWidget(self.select_file_btn)
         file_layout.addWidget(self.input_path_label, 1)
         input_layout.addLayout(file_layout)
@@ -265,7 +281,12 @@ class PsychToCodenameConverter(QMainWindow):
 
         self.select_output_btn = QPushButton("Select Output Path")
         self.select_output_btn.clicked.connect(self.select_output_path)
-        self.select_output_btn.setIcon(QIcon("icons/output.png"))
+
+        if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+            self.select_output_btn.setIcon(QIcon(output_icon_path))
+        else:
+            self.select_output_btn.setIcon(QIcon("icons/output.png"))
+
         output_file_layout.addWidget(self.select_output_btn)
         output_file_layout.addWidget(self.output_path_label, 1)
         output_layout.addLayout(output_file_layout)
@@ -285,7 +306,12 @@ class PsychToCodenameConverter(QMainWindow):
         self.convert_btn.clicked.connect(self.start_conversion)
         convert_font = QFont("Segoe UI", 12, QFont.Weight.Bold)
         self.convert_btn.setFont(convert_font)
-        self.convert_btn.setIcon(QIcon("icons/convert.png"))
+
+        if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+            self.convert_btn.setIcon(QIcon(convert_icon_path))
+        else:
+            self.convert_btn.setIcon(QIcon("icons/convert.png"))
+
         main_layout.addWidget(self.convert_btn)
 
         separator = QFrame()
@@ -515,9 +541,15 @@ class PsychToCodenameConverter(QMainWindow):
 
 
 def main():
+    app_icon_path = resource_path("icons/app.ico")
+
     app = QApplication(sys.argv)
     app.setApplicationName("Psych to Codename Character Converter")
-    app.setWindowIcon(QIcon("app.ico"))
+
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        app.setWindowIcon(QIcon(app_icon_path))
+    else:
+        app.setWindowIcon(QIcon("icons/app.ico"))
 
     window = PsychToCodenameConverter()
     window.show()
