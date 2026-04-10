@@ -24,12 +24,14 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QSplitter,
     QScrollArea,
+    QSizePolicy,
 )
 from PySide6.QtCore import Qt, QThread, Signal, QTimer, QMutex, QMutexLocker
-from PySide6.QtGui import QFont, QPalette, QColor, QIcon
+from PySide6.QtGui import QFont, QPalette, QColor, QIcon, QAction
 from PySide6.QtCore import QSettings
 
 from lxml import etree
+import webbrowser
 
 def resource_path(relative_path):
     try:
@@ -326,6 +328,7 @@ class PsychToCodenameConverter(QMainWindow):
         self.setMinimumSize(950, 700)
         self.resize(950, 700)
         self.center()
+        self.create_toolbar()
 
         xml_icon_path = resource_path("icons/xml.png")
         output_icon_path = resource_path("icons/output.png")
@@ -535,6 +538,43 @@ class PsychToCodenameConverter(QMainWindow):
         else:
             self.stop_batch_btn.setIcon(QIcon("icons/stop.png"))
         batch_action_layout.addWidget(self.stop_batch_btn)
+
+    def create_toolbar(self):
+        web_icon_path = resource_path("icons/web.png")
+        bug_report_icon_path = resource_path("icons/bug_report.png")
+
+        toolbar = self.addToolBar("Navigation")
+        toolbar.setMovable(False)
+
+        web_action = QAction("Try on Web version", self)
+        
+        if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+            web_action.setIcon(QIcon(web_icon_path))
+        else:
+            web_action.setIcon(QIcon("icons/web.png"))
+
+        web_action.triggered.connect(self.open_website)
+        toolbar.addAction(web_action)
+
+        bug_report = QAction("Report the bug on GitHub", self)
+
+        if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+            bug_report.setIcon(QIcon(bug_report_icon_path))
+        else:
+            bug_report.setIcon(QIcon("icons/bug_report.png"))
+
+        bug_report.triggered.connect(self.report_bug)
+        toolbar.addAction(bug_report)
+
+        spacer = QWidget()
+        spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        toolbar.addWidget(spacer)
+
+    def open_website(self):
+        webbrowser.open("https://sirthegamercoder.github.io/Psych-to-Codename-Character-Converter/")
+
+    def report_bug(self):
+        webbrowser.open("https://github.com/sirthegamercoder/Psych-to-Codename-Character-Converter/issues")
 
     def center(self):
         frame_geo = self.frameGeometry()
