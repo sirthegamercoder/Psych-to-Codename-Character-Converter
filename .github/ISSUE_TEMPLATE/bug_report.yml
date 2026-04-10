@@ -1,5 +1,5 @@
 name: Bug Report
-description: Report a bug with tool here
+description: Report a bug with this tool here
 labels: [bug]
 body:
   - type: textarea
