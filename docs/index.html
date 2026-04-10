@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <title>Psych to Codename Character Converter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(145deg, #1e1e23 0%, #18181c 100%);
+            font-family: 'Segoe UI', Roboto, system-ui, -apple-system, 'Helvetica Neue', sans-serif;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #e0e0e0;
+        }
+
+        .converter-card {
+            max-width: 900px;
+            width: 100%;
+            margin: 16px auto;
+            background: #2a2a30;
+            border-radius: 32px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+
+        .header {
+            background: #1f1f24;
+            padding: 24px 24px 20px 24px;
+            text-align: center;
+            border-bottom: 1px solid #3a3a42;
+        }
+
+        .header h1 {
+            font-size: 1.7rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #c0ffb0, #6fcf97);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: -0.3px;
+        }
+
+        .header p {
+            font-size: 0.85rem;
+            color: #9e9eae;
+            margin-top: 8px;
+        }
+
+        .content {
+            padding: 24px;
+        }
+
+        .section {
+            background: #232327;
+            border-radius: 24px;
+            padding: 18px 20px;
+            margin-bottom: 24px;
+            border: 1px solid #3a3a44;
+            transition: all 0.2s;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #b1ffb1;
+            letter-spacing: -0.2px;
+        }
+
+        .section-title .badge {
+            background: #3a6b3e;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 40px;
+            font-weight: normal;
+        }
+
+        .drag-zone {
+            border: 2px dashed #4a4a5a;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: all 0.2s ease;
+            cursor: default;
+            background: #1a1a20;
+        }
+
+        .drag-zone.drag-over {
+            border-color: #6fcf97;
+            background: #2a3a2e;
+            transform: scale(0.98);
+        }
+
+        .drag-zone p {
+            color: #8e8e9e;
+            font-size: 0.9rem;
+        }
+
+        .drag-zone .drag-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .file-list {
+            margin-top: 16px;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .file-item {
+            background: #121215;
+            padding: 10px 12px;
+            margin: 6px 0;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            font-family: monospace;
+            border-left: 3px solid #6fcf97;
+            transition: all 0.2s ease;
+        }
+
+        .file-item.converting {
+            border-left-color: #ffb86b;
+            background: #2a2a20;
+            animation: pulse 1s infinite;
+        }
+
+        .file-item.success {
+            border-left-color: #6fcf97;
+            background: #1a2a1a;
+        }
+
+        .file-item.error {
+            border-left-color: #ff6b6b;
+            background: #2a1a1a;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .file-item .file-status {
+            font-size: 1rem;
+            margin-right: 8px;
+        }
+
+        .file-item .file-name {
+            flex: 1;
+            word-break: break-word;
+        }
+
+        .file-item .remove-file {
+            background: #3a2a2a;
+            color: #ff9e8f;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: all 0.2s;
+        }
+
+        .file-item .remove-file:hover {
+            background: #5a3a3a;
+            transform: scale(1.05);
+        }
+
+        .batch-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: #3c8c40;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            font-family: inherit;
+        }
+
+        button i {
+            font-style: normal;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        button:hover:not(:disabled) {
+            background: #2f7533;
+            transform: scale(0.98);
+        }
+
+        button:active:not(:disabled) {
+            transform: scale(0.96);
+        }
+
+        .btn-outline {
+            background: #2e2e38;
+            border: 1px solid #5a5a6a;
+            box-shadow: none;
+        }
+
+        .btn-outline:hover:not(:disabled) {
+            background: #3e3e4a;
+        }
+
+        .btn-danger {
+            background: #8c3c3c;
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background: #752f2f;
+        }
+
+        .convert-btn {
+            width: 100%;
+            background: linear-gradient(95deg, #3a9e40, #2d7a32);
+            padding: 14px;
+            font-size: 1.1rem;
+            margin-top: 8px;
+            font-weight: bold;
+            gap: 12px;
+        }
+
+        .convert-btn:disabled {
+            opacity: 0.6;
+            transform: none;
+            cursor: not-allowed;
+            background: #4a6e4c;
+        }
+
+        .progress-area {
+            margin: 20px 0 16px;
+        }
+
+        .progress-bar {
+            background: #18181c;
+            border-radius: 40px;
+            height: 8px;
+            width: 100%;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            background: #6fcf97;
+            border-radius: 40px;
+            transition: width 0.3s ease;
+        }
+
+        .status-text {
+            font-size: 0.85rem;
+            padding: 8px 12px;
+            background: #1a1a20;
+            border-radius: 40px;
+            text-align: center;
+            font-family: monospace;
+            color: #b9f6ca;
+            transition: all 0.2s;
+        }
+
+        .status-text.error {
+            color: #ff9e8f;
+            background: #2e2220;
+        }
+
+        .status-text.success {
+            color: #b9ffc4;
+            background: #1a2a1a;
+        }
+
+        .stats-area {
+            margin-top: 16px;
+            padding: 12px;
+            background: #1a1a20;
+            border-radius: 16px;
+            display: flex;
+            justify-content: space-around;
+            gap: 12px;
+            font-size: 0.85rem;
+        }
+
+        .stat {
+            text-align: center;
+            flex: 1;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #6fcf97;
+        }
+
+        .stat-label {
+            color: #8e8e9e;
+            font-size: 0.7rem;
+            margin-top: 4px;
+        }
+
+        .footer-note {
+            text-align: center;
+            font-size: 0.7rem;
+            color: #6f6f80;
+            padding: 16px 20px 20px;
+            border-top: 1px solid #35353d;
+            margin-top: 8px;
+        }
+
+        @media (max-width: 560px) {
+            body {
+                padding: 12px;
+            }
+            .content {
+                padding: 18px;
+            }
+            button {
+                justify-content: center;
+            }
+            .section {
+                padding: 14px;
+            }
+            .header h1 {
+                font-size: 1.4rem;
+            }
+            .stats-area {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="converter-card">
+    <div class="content">
+        <div class="section">
+            <div class="drag-zone" id="dragZone">
+                <p>Drag & drop XML file(s) here<br>or click "Add File(s)" to select</p>
+                <small style="color:#6a6a7a;">Supports multiple files</small>
+            </div>
+            
+            <div class="file-list" id="fileList">
+                <div style="text-align: center; color: #6a6a7a; padding: 20px;">
+                    No file(s) selected
+                </div>
+            </div>
+            
+            <div class="batch-actions">
+                <button id="clearFilesBtn" class="btn-outline btn-danger">Clear All</button>
+                <button id="selectFilesBtn" class="btn-outline">Add File(s)</button>
+            </div>
+            
+            <input type="file" id="fileInput" multiple accept=".xml" style="display: none;" />
+        </div>
+
+        <div class="progress-area" id="progressArea" style="display: none;">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="status-text" id="statusMsg">Initializing...</div>
+        </div>
+
+        <div class="stats-area" id="statsArea" style="display: none;">
+            <div class="stat">
+                <div class="stat-value" id="statTotal">0</div>
+                <div class="stat-label">Total File(s)</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="statSuccess">0</div>
+                <div class="stat-label">Converted</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="statFailed">0</div>
+                <div class="stat-label">Failed</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="statCurrent">0</div>
+                <div class="stat-label">Current</div>
+            </div>
+        </div>
+
+        <button id="convertBtn" class="convert-btn" disabled>Convert</button>
+    </div>
+</div>
+
+<script>
+    const dragZone = document.getElementById('dragZone');
+    const fileInput = document.getElementById('fileInput');
+    const selectFilesBtn = document.getElementById('selectFilesBtn');
+    const clearFilesBtn = document.getElementById('clearFilesBtn');
+    const fileListDiv = document.getElementById('fileList');
+    const convertBtn = document.getElementById('convertBtn');
+    const progressArea = document.getElementById('progressArea');
+    const progressFill = document.getElementById('progressFill');
+    const statusMsg = document.getElementById('statusMsg');
+    const statsArea = document.getElementById('statsArea');
+    const statTotal = document.getElementById('statTotal');
+    const statSuccess = document.getElementById('statSuccess');
+    const statFailed = document.getElementById('statFailed');
+    const statCurrent = document.getElementById('statCurrent');
+
+    let selectedFiles = [];
+    let fileContents = new Map();
+    let fileStatus = new Map();
+    let isConverting = false;
+    let fileSystemSupported = null;
+    let successCount = 0;
+    let failCount = 0;
+
+    function updateFileListUI() {
+        if (selectedFiles.length === 0) {
+            fileListDiv.innerHTML = '<div style="text-align: center; color: #6a6a7a; padding: 20px;">No file(s) selected</div>';
+            convertBtn.disabled = true;
+            statsArea.style.display = 'none';
+            return;
+        }
+        
+        convertBtn.disabled = false;
+        statsArea.style.display = 'flex';
+        statTotal.textContent = selectedFiles.length;
+        
+        let html = '';
+        selectedFiles.forEach((file, index) => {
+            const sizeKB = (file.size / 1024).toFixed(1);
+            const status = fileStatus.get(file.name) || 'pending';
+            const statusIcon = getStatusIcon(status);
+            
+            html += `
+                <div class="file-item ${status}" data-filename="${file.name}">
+                    <span class="file-status">${statusIcon}</span>
+                    <span class="file-name">${escapeHtml(file.name)} (${sizeKB} KB)</span>
+                    <button class="remove-file" data-index="${index}" ${isConverting ? 'disabled' : ''}>Remove</button>
+                </div>
+            `;
+        });
+        fileListDiv.innerHTML = html;
+
+        if (!isConverting) {
+            document.querySelectorAll('.remove-file').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = parseInt(btn.dataset.index);
+                    removeFileAtIndex(index);
+                });
+            });
+        }
+    }
+    
+    function getStatusIcon(status) {
+        switch(status) {
+            case 'converting': return '⚙️';
+            case 'success': return '✅';
+            case 'error': return '❌';
+            default: return '⏳';
+        }
+    }
+    
+    function updateFileItemStatus(filename, status, message = '') {
+        const fileItem = document.querySelector(`.file-item[data-filename="${filename}"]`);
+        if (fileItem) {
+            fileItem.classList.remove('pending', 'converting', 'success', 'error');
+            fileItem.classList.add(status);
+            const statusSpan = fileItem.querySelector('.file-status');
+            if (statusSpan) {
+                statusSpan.textContent = getStatusIcon(status);
+            }
+
+            if (message) {
+                fileItem.title = message;
+            }
+        }
+        fileStatus.set(filename, status);
+    }
+    
+    function updateStats() {
+        statSuccess.textContent = successCount;
+        statFailed.textContent = failCount;
+        const currentConverting = Array.from(fileStatus.values()).filter(s => s === 'converting').length;
+        statCurrent.textContent = currentConverting;
+    }
+    
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+    
+    function removeFileAtIndex(index) {
+        const removed = selectedFiles[index];
+        selectedFiles.splice(index, 1);
+        fileContents.delete(removed.name);
+        fileStatus.delete(removed.name);
+        updateFileListUI();
+        updateStatusMessage(`Removed ${removed.name}`, 'info');
+    }
+    
+    function clearAllFiles() {
+        if (isConverting) {
+            updateStatusMessage('Cannot clear file(s) during conversion', 'error');
+            return;
+        }
+        selectedFiles = [];
+        fileContents.clear();
+        fileStatus.clear();
+        updateFileListUI();
+        updateStatusMessage('All file(s) cleared', 'info');
+    }
+    
+    function updateStatusMessage(message, type = 'info') {
+        statusMsg.innerText = message;
+        statusMsg.classList.remove('error', 'success');
+        if (type === 'error') statusMsg.classList.add('error');
+        else if (type === 'success') statusMsg.classList.add('success');
+    }
+
+    function addFiles(files) {
+        const validFiles = Array.from(files).filter(file => {
+            if (!file.name.toLowerCase().endsWith('.xml')) {
+                updateStatusMessage(`Skipped "${file.name}": Not an XML file`, 'error');
+                return false;
+            }
+            if (selectedFiles.some(f => f.name === file.name)) {
+                updateStatusMessage(`Skipped "${file.name}": Already added`, 'error');
+                return false;
+            }
+            return true;
+        });
+        
+        if (validFiles.length === 0) return;
+        
+        validFiles.forEach(file => {
+            selectedFiles.push(file);
+            fileStatus.set(file.name, 'pending');
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                fileContents.set(file.name, e.target.result);
+                updateStatusMessage(`Loaded "${file.name}"`, 'success');
+                updateFileItemStatus(file.name, 'pending');
+            };
+            reader.onerror = () => {
+                updateStatusMessage(`Failed to read "${file.name}"`, 'error');
+                const index = selectedFiles.findIndex(f => f.name === file.name);
+                if (index !== -1) {
+                    selectedFiles.splice(index, 1);
+                    fileStatus.delete(file.name);
+                }
+                updateFileListUI();
+            };
+            reader.readAsText(file, 'UTF-8');
+        });
+        
+        updateFileListUI();
+        updateStatusMessage(`Added ${validFiles.length} file(s)`, 'success');
+    }
+    
+    dragZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        if (!isConverting) dragZone.classList.add('drag-over');
+    });
+    
+    dragZone.addEventListener('dragleave', () => {
+        dragZone.classList.remove('drag-over');
+    });
+    
+    dragZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dragZone.classList.remove('drag-over');
+        if (isConverting) {
+            updateStatusMessage('Cannot add file(s) during conversion', 'error');
+            return;
+        }
+        const files = Array.from(e.dataTransfer.files);
+        if (files.length > 0) {
+            addFiles(files);
+        }
+    });
+    
+    selectFilesBtn.addEventListener('click', () => {
+        if (!isConverting) fileInput.click();
+    });
+    
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            addFiles(Array.from(e.target.files));
+            fileInput.value = '';
+        }
+    });
+    
+    clearFilesBtn.addEventListener('click', clearAllFiles);
+
+    function hexToRgb(hexColor) {
+        let hex = hexColor.replace('#', '');
+        if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+        try {
+            const r = parseInt(hex.substring(0,2), 16);
+            const g = parseInt(hex.substring(2,4), 16);
+            const b = parseInt(hex.substring(4,6), 16);
+            if (isNaN(r) || isNaN(g) || isNaN(b)) return [161, 161, 161];
+            return [r, g, b];
+        } catch(e) {
+            return [161, 161, 161];
+        }
+    }
+
+    function parseIndices(indicesStr) {
+        if (!indicesStr) return [];
+        const result = new Set();
+        const parts = indicesStr.split(',');
+        for (let part of parts) {
+            part = part.trim();
+            if (part.includes('..')) {
+                let [start, end] = part.split('..').map(Number);
+                if (!isNaN(start) && !isNaN(end)) {
+                    for (let i = start; i <= end; i++) result.add(i);
+                }
+            } else if (!isNaN(Number(part))) {
+                result.add(Number(part));
+            }
+        }
+        return Array.from(result).sort((a,b) => a-b);
+    }
+
+    function getAttribute(element, name, defaultValue = null) {
+        return element.getAttribute(name) ?? defaultValue;
+    }
+
+    function getFloatAtt(element, name, defaultVal) {
+        const val = element.getAttribute(name);
+        if (val === null) return defaultVal;
+        const parsed = parseFloat(val);
+        return isNaN(parsed) ? defaultVal : parsed;
+    }
+
+    function getBoolAtt(element, name, defaultVal) {
+        const val = element.getAttribute(name);
+        if (val === null) return defaultVal;
+        return ['true', '1', 'yes'].includes(val.toLowerCase());
+    }
+
+    function convertXmlToPsych(xmlString, fileName) {
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlString, 'text/xml');
+        const parserError = xmlDoc.querySelector('parsererror');
+        if (parserError) {
+            throw new Error('Invalid XML syntax: ' + parserError.textContent);
+        }
+        
+        const root = xmlDoc.documentElement;
+        if (root.tagName !== 'character') {
+            throw new Error('Root element must be <character> (Codename Engine format)');
+        }
+
+        const x = getFloatAtt(root, 'x', 0);
+        const y = getFloatAtt(root, 'y', 0);
+        const sprite = getAttribute(root, 'sprite', 'characters/BOYFRIEND');
+        const scale = getFloatAtt(root, 'scale', 1);
+        const camx = getFloatAtt(root, 'camx', 0);
+        const camy = getFloatAtt(root, 'camy', 0);
+        const icon = getAttribute(root, 'icon', 'face');
+        const holdTime = getFloatAtt(root, 'holdTime', 4);
+        const flipX = getBoolAtt(root, 'flipX', false);
+        const colorHex = getAttribute(root, 'color', '#A1A1A1');
+        
+        const rgbColor = hexToRgb(colorHex);
+
+        const animNodes = root.querySelectorAll('anim');
+        const animationsData = [];
+        
+        for (let animNode of animNodes) {
+            const name = getAttribute(animNode, 'name', '');
+            const anim = getAttribute(animNode, 'anim', '');
+            const animX = getFloatAtt(animNode, 'x', 0);
+            const animY = getFloatAtt(animNode, 'y', 0);
+            const fps = Math.round(getFloatAtt(animNode, 'fps', 24));
+            const loop = getBoolAtt(animNode, 'loop', false);
+            const indicesRaw = getAttribute(animNode, 'indices', null);
+            
+            animationsData.push({
+                name: name,
+                anim: anim,
+                x: animX,
+                y: animY,
+                fps: fps,
+                loop: loop,
+                indices: indicesRaw
+            });
+        }
+        
+        const psychAnims = [];
+        for (let anim of animationsData) {
+            let indicesArray = [];
+            if (anim.indices) {
+                indicesArray = parseIndices(anim.indices);
+            }
+            psychAnims.push({
+                anim: anim.name,
+                name: anim.anim,
+                fps: anim.fps,
+                loop: anim.loop,
+                indices: indicesArray,
+                offsets: [parseInt(anim.x), parseInt(anim.y)]
+            });
+        }
+        
+        const finalJson = {
+            animations: psychAnims,
+            image: "characters/" + sprite,
+            scale: scale,
+            sing_duration: holdTime,
+            healthicon: icon,
+            position: [x, y],
+            camera_position: [camx, camy],
+            flip_x: flipX,
+            no_antialiasing: false,
+            healthbar_colors: rgbColor,
+            vocals_file: null
+        };
+        
+        return finalJson;
+    }
+
+    async function saveFileWithPicker(content, defaultName) {
+        if (fileSystemSupported === null) {
+            fileSystemSupported = 'showSaveFilePicker' in window;
+        }
+        
+        if (fileSystemSupported) {
+            try {
+                const fileHandle = await window.showSaveFilePicker({
+                    suggestedName: defaultName,
+                    types: [{
+                        description: 'JSON File(s)',
+                        accept: { 'application/json': ['.json'] }
+                    }]
+                });
+                const writable = await fileHandle.createWritable();
+                await writable.write(content);
+                await writable.close();
+                return { success: true, name: fileHandle.name };
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    return { success: false, error: err.message };
+                }
+                return { success: false, cancelled: true };
+            }
+        } else {
+            const blob = new Blob([content], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = defaultName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            return { success: true, name: defaultName, method: 'download' };
+        }
+    }
+
+    async function startConversion() {
+        if (isConverting) return;
+        
+        if (selectedFiles.length === 0) {
+            updateStatusMessage('No file(s) to convert', 'error');
+            return;
+        }
+        
+        const missingContent = selectedFiles.filter(file => !fileContents.has(file.name));
+        if (missingContent.length > 0) {
+            updateStatusMessage(`Waiting for ${missingContent.length} file(s) to load...`, 'error');
+            return;
+        }
+        
+        isConverting = true;
+        convertBtn.disabled = true;
+        clearFilesBtn.disabled = true;
+        selectFilesBtn.disabled = true;
+        progressArea.style.display = 'block';
+        
+        successCount = 0;
+        failCount = 0;
+        const total = selectedFiles.length;
+        
+        for (let i = 0; i < selectedFiles.length; i++) {
+            const file = selectedFiles[i];
+            const xmlContent = fileContents.get(file.name);
+            const percent = ((i / total) * 100);
+            progressFill.style.width = `${percent}%`;
+            updateStatusMessage(`Converting ${i+1}/${total}: ${file.name}`, 'info');
+
+            updateFileItemStatus(file.name, 'converting');
+            updateStats();
+            
+            try {
+                const psychJson = convertXmlToPsych(xmlContent, file.name);
+                const jsonString = JSON.stringify(psychJson, null, 2);
+                const outputName = file.name.replace(/\.xml$/i, '.json');
+                
+                const result = await saveFileWithPicker(jsonString, outputName);
+                
+                if (result.success) {
+                    successCount++;
+                    updateFileItemStatus(file.name, 'success', `Saved as ${result.name}`);
+                    updateStatusMessage(`Converted: ${file.name}`, 'success');
+                } else if (!result.cancelled) {
+                    failCount++;
+                    updateFileItemStatus(file.name, 'error', `Failed: ${result.error || 'Unknown error'}`);
+                    updateStatusMessage(`Failed: ${file.name}`, 'error');
+                } else {
+                    updateStatusMessage('Conversion cancelled by user', 'error');
+                    break;
+                }
+                
+            } catch (err) {
+                failCount++;
+                updateFileItemStatus(file.name, 'error', `Error: ${err.message}`);
+                updateStatusMessage(`Error converting ${file.name}: ${err.message}`, 'error');
+            }
+            
+            updateStats();
+        }
+        
+        progressFill.style.width = '100%';
+        
+        if (successCount === total) {
+            updateStatusMessage(`Complete! All ${successCount} files converted successfully`, 'success');
+        } else if (successCount > 0) {
+            updateStatusMessage(`Complete: ${successCount} succeeded, ${failCount} failed`, 'info');
+        } else {
+            updateStatusMessage(`Failed: No files were converted`, 'error');
+        }
+        
+        setTimeout(() => {
+            progressArea.style.display = 'none';
+            progressFill.style.width = '0%';
+        }, 3000);
+        
+        isConverting = false;
+        convertBtn.disabled = false;
+        clearFilesBtn.disabled = false;
+        selectFilesBtn.disabled = false;
+    }
+    
+    convertBtn.addEventListener('click', startConversion);
+
+    updateFileListUI();
+</script>
+</body>
+</html>
